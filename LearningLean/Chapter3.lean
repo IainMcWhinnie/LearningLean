@@ -1,3 +1,4 @@
+def hello := "world"
 
 def m : Nat × Nat := (3,4)
 
