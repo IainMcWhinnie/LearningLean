@@ -5,6 +5,8 @@ open Classical
 variable (α : Type) (p q : α → Prop)
 variable (r : Prop)
 
+set_option linter.unusedVariables false
+
 -- Exercise 1
 
 example : (∀ x, p x ∧ q x) ↔ (∀ x, p x) ∧ (∀ x, q x) :=
