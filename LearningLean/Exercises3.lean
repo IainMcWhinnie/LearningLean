@@ -105,26 +105,123 @@ example : ((p ∨ q) → r) ↔ (p → r) ∧ (q → r) := by
     | Or.inr hq => apply h.right; assumption
 
 
-example : ¬(p ∨ q) ↔ ¬p ∧ ¬q := sorry
-example : ¬p ∨ ¬q → ¬(p ∧ q) := sorry
-example : ¬(p ∧ ¬p) := sorry
-example : p ∧ ¬q → ¬(p → q) := sorry
-example : ¬p → (p → q) := sorry
-example : (¬p ∨ q) → (p → q) := sorry
-example : p ∨ False ↔ p := sorry
-example : p ∧ False ↔ False := sorry
-example : (p → q) → (¬q → ¬p) := sorry
+example : ¬(p ∨ q) ↔ ¬p ∧ ¬q := by
+  apply Iff.intro
+  . intro h
+    apply And.intro
+    intro hp
+    exact h (Or.inl hp)
+    intro hq
+    exact h (Or.inr hq)
+  . intro h
+    intro hpq
+    cases hpq with
+    | inl hp => exact h.left hp
+    | inr hq => exact h.right hq
+
+example : ¬p ∨ ¬q → ¬(p ∧ q) := by
+  intro h
+  intro hpq
+  cases h with
+  | inl hp => exact hp hpq.left
+  | inr hq => exact hq hpq.right
+
+
+example : ¬(p ∧ ¬p) := by
+  intro hem
+  exact hem.right hem.left
+
+example : p ∧ ¬q → ¬(p → q) := by
+  intro h
+  intro hpq
+  have hq : q := by exact hpq h.left
+  exact h.right hq
+
+example : ¬p → (p → q) := by
+  intro hnp hp
+  exact absurd hp hnp
+
+example : (¬p ∨ q) → (p → q) := by
+  intro hpq hp
+  cases hpq
+  exact absurd hp (by assumption)
+  assumption
+
+example : p ∨ False ↔ p := by
+  apply Iff.intro
+  . intro h
+    cases h with
+    | inl hp => exact hp
+    | inr hf => exact False.elim hf
+  . intro h
+    apply Or.inl
+    assumption
+
+example : p ∧ False ↔ False := by
+  apply Iff.intro
+  . intro h
+    exact h.right
+  . intro h
+    apply And.intro
+    exact False.elim h
+    assumption
+
+example : (p → q) → (¬q → ¬p) := by
+  intro hpq hnq hp
+  have hq : q := by exact hpq hp
+  exact hnq hq
 
 open Classical
 
 variable (p q r : Prop)
 
-example : (p → q ∨ r) → ((p → q) ∨ (p → r)) := sorry
-example : ¬(p ∧ q) → ¬p ∨ ¬q := sorry
-example : ¬(p → q) → p ∧ ¬q := sorry
-example : (p → q) → (¬p ∨ q) := sorry
-example : (¬q → ¬p) → (p → q) := sorry
-example : p ∨ ¬p := sorry
-example : (((p → q) → p) → p) := sorry
+example : (p → q ∨ r) → ((p → q) ∨ (p → r)) := by
+  intro h
+  cases (em p) with
+  | inr hnp => apply Or.inl; intro hp; exact absurd hp hnp
+  | inl hp => match (h hp) with
+    | Or.inl hq => apply Or.inl; intro _; assumption
+    | Or.inr hr => apply Or.inr; intro _; assumption
 
-example : ¬(p ↔ ¬p) := sorry
+example : ¬(p ∧ q) → ¬p ∨ ¬q := by
+  intro h
+  cases (em p) with
+  | inl hp => apply Or.inr; intro hq; exact h ⟨hp, hq⟩
+  | inr hnp => apply Or.inl; assumption
+
+example : ¬(p → q) → p ∧ ¬q := by
+  intro h
+  cases (em p) with
+  | inl hp => apply And.intro; assumption; cases (em q) with
+    | inl hq => apply False.elim; apply h; intros; assumption
+    | inr hnq => assumption
+  | inr hnp => cases (em q) with
+    | inl hq => apply False.elim; apply h; intros; assumption
+    | inr hnq => apply False.elim; apply h; intro hp; exact absurd hp hnp
+
+example : (p → q) → (¬p ∨ q) := by
+  intro h
+  cases (em p) with
+  | inr hnp => apply Or.inl; assumption
+  | inl hp => apply Or.inr; exact h hp
+
+example : (¬q → ¬p) → (p → q) := by
+  intro h hp
+  cases (em q) with
+  | inl hq => assumption
+  | inr hnq => exact absurd hp (h hnq)
+
+example : p ∨ ¬p := em p
+
+example : (((p → q) → p) → p) := by
+  intro h
+  cases (em p) with
+  | inl hp => assumption
+  | inr hnp => apply h; intro hp; exact absurd hp hnp
+
+example : ¬(p ↔ ¬p) := by
+  intro h
+  have hnp := fun x => (h.mp x) x
+  have hp := h.mpr hnp
+  apply hnp
+  assumption
