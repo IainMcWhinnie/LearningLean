@@ -376,6 +376,10 @@ example : (¬ ∀ x, p x) ↔ (∃ x, ¬ p x) := by
     cases (em (p x)) with
     | inl hpx => assumption
     | inr hnpx => exact False.elim (nh (by apply Exists.intro x; exact hnpx))
+  . intro h
+    intro nh
+    match h with
+    | ⟨x, hx⟩ => exact hx (nh x)
 
 example : (∀ x, p x → r) ↔ (∃ x, p x) → r := by
   apply Iff.intro
@@ -396,7 +400,7 @@ example (a : α) : (∃ x, p x → r) ↔ (∀ x, p x) → r := by
     | ⟨x, hx⟩ => apply hx; exact h2 x
   . intro h
     cases (em (∀ x, p x)) with
-    | inl hallpx => admit
+    | inl hallpx => apply Exists.intro a; intro _; exact h hallpx
     | inr hnallpx =>
     have w : (∃ (x:α), ¬ p x):= (by
     apply byContradiction;
