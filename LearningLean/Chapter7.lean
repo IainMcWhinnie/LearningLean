@@ -15,6 +15,7 @@ inductive Weekday where
   deriving Repr
 
 #check Weekday
+#check Weekday.sunday
 
 section
 
@@ -111,3 +112,89 @@ inductive Inhabited (α : Type u) where
   | mk : α → Inhabited α
 
 end Hidden3
+
+namespace Hidden4
+
+-- inductive Exists {α : Type} (p : α → Prop) : Prop where
+--   | intro (x : α) (h : p x) : Exists p
+
+inductive Exists {α : Sort u} (p : α → Prop) : Prop where
+  | intro (w : α) (h : p w) : Exists p
+
+inductive Subtype {α : Type u} (p : α → Prop) where
+  | mk : (x : α) → p x → Subtype p
+
+#check @Hidden4.Exists.intro.{1}
+#check @Hidden4.Subtype.mk.{0}
+
+def isEven (x : Nat) := ∃ k, x = 2*k
+
+#check (Subtype isEven)
+#check (Exists isEven)
+#check {x : Nat // isEven x}
+
+inductive Nat where
+  | zero : Nat
+  | succ : Nat → Nat
+
+-- def add (m n : Nat) :=
+--   match n with
+--   | zero => m
+--   | (Hidden4.Nat.succ n) => succ (add m n)
+
+end Hidden4
+
+open Nat
+
+example (n : Nat) : 0 + n = n :=
+  Nat.recAux (motive := fun x : Nat => 0 + x = x)
+  (show 0+0=0 from Nat.add_zero 0)
+  (fun (m : Nat) (ih : 0 + m = m) =>
+    show 0 + (succ m) = succ m from
+    calc 0+(succ m)
+      _ = succ (0 + m) := rfl
+      _ = succ m       := by rw[ih])
+  n
+
+
+#check Nat.recAux
+
+example (m n k : Nat) : m + n + k = m + (n + k) :=
+  Nat.recAux (motive := fun k =>  m + n + k = m + (n + k))
+  (show m + n + 0 = m + (n + 0) from rfl)
+  (fun x ih => show m + n + (succ x) = m + (n + succ x) from
+  calc m + n + (succ x)
+    _ = succ ((m+n) + x) := rfl
+    _ = succ (m + (n + x)) := by rw[ih]
+    _ = m + succ (n + x) := rfl
+    _ = m + (n + succ x) := rfl)
+  k
+
+
+example (p : Nat → Prop) (hz : p 0) (hs : ∀ n, p (Nat.succ n)) : ∀ n, p n := by
+  intro n
+  cases n
+  . exact hz
+  . apply hs
+
+example (n : Nat) (h : n ≠ 0) : succ (pred n) = n := by
+  cases n with
+  | zero => apply absurd rfl h
+  | succ m => rfl
+
+
+example (n : Nat) : 0 + n = n := by
+  induction n with
+  | zero => rfl
+  | succ k ih => rw [Nat.add_succ, ih]
+
+open Nat
+
+example (m n k : Nat) (h : succ (succ m) = succ (succ n))
+        : n + k = m + k := by
+  injection h with h'
+  injection h' with h''
+  rw [h'']
+
+example (m n : Nat) (h : succ m = 0) : n = n + 7 := by
+  injection h
