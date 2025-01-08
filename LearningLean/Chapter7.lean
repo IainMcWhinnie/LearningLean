@@ -63,11 +63,11 @@ end Hidden
 
 def fst (α : Type u) (β : Type v) (p : Prod α β) : α :=
   match p with
-  | Prod.mk a b => a
+  | Prod.mk a _ => a
 
 def snd (α : Type u) (β : Type v) (p : Prod α β) : β :=
   match p with
-  | Prod.mk a b => b
+  | Prod.mk _ b => b
 
 def prod_example (p : Bool × Nat) : Nat :=
   Prod.casesOn (motive := fun _ => Nat) p (fun b n => cond b (2*n) (2*n+1))
